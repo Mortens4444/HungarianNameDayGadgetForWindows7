@@ -1,0 +1,197 @@
+﻿<html>
+	<head>
+		<title>PTS Technology ®</title>
+		<meta http-equiv="MSThemeCompatible" content="yes">
+		<meta http-equiv="Content-Language" content="hu">
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		
+		<script type="text/javascript" language="JavaScript">
+		
+			var font_color = "White";
+			var font_type = "Verdana";
+			var font_size = 12;
+			var split_length = 80;
+			
+			var left = 5;
+			var top = 5;
+			var delta = 3;
+			
+			var second_row_top = top + font_size + delta;
+			var third_row_top = top + 2 * (font_size + delta);
+			var forth_row_top = top + 3 * (font_size + delta);
+
+			var ma;
+			var holnap;
+			var holnaputan;
+			var egy_het_mulva;
+
+			var minute = 60000;
+			
+			function TodayPlussz(plussz)
+			{
+				var today = new Date();
+				return new Date(today.getYear(), today.getMonth(), today.getDate() + plussz);
+			}
+
+			function DateToString(dt, show_hour)
+			{
+				//dt.setHours(0, 0, 0);
+				var napok = new Array("Vasárnap", "Hétfő", "Kedd", "Szerda", "Csütörtök", "Péntek", "Szombat");
+				var honapok = new Array("január", "február", "március", "április", "május", "június", "július", "augusztus", "szeptember", "október", "november", "december");
+				if (show_hour == null)
+					return dt.getFullYear() + ". " + honapok[dt.getMonth()] + " " + dt.getDate() + ". " + napok[dt.getDay()] + " (" + GetWeekNumber(dt) + ". hét)";
+				else
+					return dt.getFullYear() + ". " + honapok[dt.getMonth()] + " " + dt.getDate() + ". " + napok[dt.getDay()] + " " + FormatNumber(dt.getHours()) + ":" + FormatNumber(dt.getMinutes()) /*+ ":" + FormatNumber(dt.getSeconds())*/ + " (" + GetWeekNumber(dt) + ". hét)";
+			}
+			
+			function GetWeekNumber(d)
+			{
+				// Copy date so don't modify original
+				d = new Date(d);
+				d.setHours(0, 0, 0);
+				// Set to nearest Thursday: current date + 4 - current day number
+				// Make Sunday's day number 7
+				d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+				// Get first day of year
+				var yearStart = new Date(d.getFullYear(), 0, 1);
+				// Calculate full weeks to nearest Thursday
+				var weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7)
+				// Return array of year and week number
+				return weekNo;
+			}
+			
+			function WriteThing(id, date, my_event)
+			{
+				var thing;
+				var thing_2;
+				if (my_event)
+				{
+					thing = Esemeny(date);
+					thing_2 = "esedékes";
+				}
+				else
+				{
+					thing = Szuletesnap(date);
+					thing_2 = " tartja születésnapját";
+				}
+				
+				var today = new Date().toDateString() == date.toDateString();
+				var tomorrow = TodayPlussz(1).toDateString() == date.toDateString();
+				var day_after_tomorrow = TodayPlussz(2).toDateString() == date.toDateString();
+				var after_a_week = TodayPlussz(7).toDateString() == date.toDateString();
+
+				if (thing != "")
+				{
+					if (today) WriteLine(id, "Ma " + thing_2 + ": " + thing + ".", left, top, font_color);
+					else if (tomorrow) WriteLine(id, "Holnap " + thing_2 + ": " + thing + ".", left, second_row_top, font_color);
+					else if (day_after_tomorrow) WriteLine(id, "Holnapután " + thing_2 + ": " + thing + ".", left, third_row_top, font_color);
+					else if (after_a_week) WriteLine(id, "Jövő héten " + thing_2 + ": " + thing + ".", left, forth_row_top, font_color);
+				}
+			}
+			
+			function SplitLine(str, n)
+			{
+				var b = '';
+				var s = str;
+				while (s.length > n)
+				{
+					var c = s.substring(0, n);
+					var split_index = c.lastIndexOf(' ');
+					var last_new_line_character_index = c.lastIndexOf('\n');
+					if (last_new_line_character_index != -1) split_index = last_new_line_character_index;
+					if (split_index == -1) split_index = n;
+					
+					b += c.substring(0, split_index) + '\n';
+					s = s.substring(split_index + 1);
+				}
+				return b + s;
+			}
+
+			var r = 8;
+			var a = 100;
+			var shadow_font_color = "Black";
+			
+			function WriteLine(background, str, x, y, font_color)
+			{
+				var s = SplitLine(str, split_length);
+				var txt = background.addTextObject(s, font_type, font_size, font_color, x, y);
+				txt.addGlow(shadow_font_color, r, a);
+				return txt.width;
+			}
+
+			function WriteColoredLine(id, str, colored_str, str_2, x, y, color)
+			{
+				var width = WriteLine(id, str, x, y, font_color);
+				var xp = width + 5;
+				var width_2 = WriteLine(id, colored_str, xp, y, color);
+				xp += width_2;
+				WriteLine(id, str_2, xp, y, font_color);
+			}
+			
+			function FormatNumber(n)
+			{
+				return n > 9 ? n : "0" + n;
+			}
+			
+			function NameDayInfo(background)
+			{
+				background.removeObjects();
+				
+				ma = new Date();
+				holnap = TodayPlussz(1);
+				holnaputan = TodayPlussz(2);
+				egy_het_mulva = TodayPlussz(7);
+
+				// Névnaposok
+				WriteColoredLine(background, "Ma " + DateToString(ma, true) + ", ", Nevnap(ma), " névnapja van.", left, top, "Red");
+				WriteColoredLine(background, "Holnap " + DateToString(holnap) + ", ", Nevnap(holnap), " névnapja lesz.", left, second_row_top, "Yellow");
+				WriteColoredLine(background, "Holnapután " + DateToString(holnaputan) + ", ", Nevnap(holnaputan), " névnapja lesz.", left, third_row_top, "LightGreen");
+			}
+
+			function Info()
+			{
+				NameDayInfo(namedays);
+				setInterval('NameDayInfo(namedays)', minute);
+			}
+			
+			// Névnap meghatározása
+			function Nevnap(dt)
+			{
+				var ho = dt.getMonth() + 1;
+				var nap = dt.getDate();
+				var napok;
+
+				if (ho == 1) napok = new Array("ÚJÉV, Fruzsina", "Ábel", "Genovéva, Benjámin", "Titusz, Leona", "Simon", "Boldizsár", "Attila, Ramóna", "Gyöngyvér", "Marcell", "Melánia", "Ágota", "Ernő", "Veronika", "Bódog", "Lóránt, Loránd", "Gusztáv", "Antal, Antónia", "Piroska", "Sára, Márió", "Fábián, Sebestyén", "Ágnes", "Vince, Artúr", "Zelma, Rajmund", "Timót", "Pál", "Vanda, Paula", "Angelika", "Károly, Karola", "Adél", "Martina, Gerda", "Marcella");
+				else if (ho == 2) napok = new Array("Ignác", "Karolina, Aida", "Balázs", "Ráhel, Csenge", "Ágota, Ingrid", "Dorottya, Dóra", "Tódor, Rómeó", "Aranka", "Abigél, Alex", "Elvira", "Bertold, Marietta", "Lívia, Lídia", "Ella, Linda", "Bálint, Valentin", "Kolos, Georgina", "Julianna, Lilla", "Donát", "Bernadett", "Zsuzsanna", "Aladár, Álmos", "Eleonóra", "Gerzson", "Alfréd", "Mátyás", "Géza", "Edina", "Ákos, Bátor", "Elemér", "Szökőnap");
+				else if (ho == 3) napok = new Array("Albin", "Lujza", "Kornélia", "Kázmér", "Adorján, Adrián", "Leonóra, Inez", "Tamás", "NEMZETKÖZI NŐNAP, Zoltán", "Franciska, Fanni", "Ildikó", "Szilárd", "Gergely", "Krisztián, Ajtony", "Matild", "NEMZETI ÜNNEP, Kristóf", "Henrietta", "Gertrúd, Patrik", "Sándor, Ede", "József, Bánk", "Klaudia", "Benedek", "Beáta, Izolda", "Emőke", "Gábor, Karina", "Irén, Irisz", "Emánuel", "Hajnalka", "Gedeon, Johanna", "Auguszta", "Zalán", "Árpád");
+				else if (ho == 4) napok = new Array("Hugó", "Áron", "Buda, Richárd", "Izidor", "Vince", "Vilmos, Bíborka", "Herman", "Dénes", "Erhard", "Zsolt", "Leó, Szaniszló", "Gyula", "Ida", "Tibor", "Anasztázia, Tas", "Csongor", "Rudolf", "Andrea, Ilma", "Emma", "Tivadar", "Konrád", "Csilla, Noémi", "Béla", "György", "Márk", "Ervin", "Zita, Mariann", "Valéria", "Péter", "Katalin, Kitti");
+				else if (ho == 5) napok = new Array("MUNKA ÜNNENPE, Fülöp, Jakab", "Zsigmond", "Tímea, Irma", "Mónika, Flórián", "Györgyi", "Ivett, Frida", "Gizella", "Mihály", "Gergely", "Ármin, Pálma", "Ferenc", "Pongrác", "Szervác, Imola", "Bonifác", "Zsófia, Szonja", "Mózes, Botond", "Paszkál", "Erik, Alexandra", "Ivó, Milán", "Bernát, Felícia", "Konstantin", "Júlia, Rita", "Dezső", "Eszter, Eliza", "Orbán", "Fülöp, Evelin", "Hella", "Emil, Csanád", "Magdolna", "Janka, Zsanett", "Angéla, Petronella");
+				else if (ho == 6) napok = new Array("Tünde", "Kármen, Anita", "Klotild", "Bulcsú", "Fatime", "Norbert, Cintia", "Róbert", "Medárd", "Félix", "Margit, Gréta", "Barnabás", "Villő", "Antal, Anett", "Vazul", "Jolán, Vid", "Jusztin", "Laura, Alida", "Arnold, Levente", "Gyárfás", "Rafael", "Alajos, Leila", "Paulina", "Zoltán", "Iván", "Vilmos", "János, Pál", "László", "Levente, Irén", "Péter, Pál", "Pál");
+				else if (ho == 7) napok = new Array("Tihamér, Annamária", "Ottó", "Kornél, Soma", "Ulrik", "Emese, Sarolta", "Csaba", "Appolónia", "Ellák", "Lukrécia", "Amália", "Nóra, Lili", "Izabella, Dalma", "Jenő", "Őrs, Stella", "Henrik, Roland", "Valter", "Endre, Elek", "Frigyes", "Emília", "Illés", "Dániel, Daniella", "Magdolna", "Lenke", "Kinga, Kincső", "Jakab, Kristóf", "Anna, Anikó", "Olga, Liliána", "Szabolcs", "Márta, Flóra", "Judit, Xénia", "Oszkár");
+				else if (ho == 8) napok = new Array("Boglárka", "Lehel", "Hermina", "Domonkos, Dominika", "Krisztina", "Berta, Bettina", "Ibolya", "László", "Emőd", "Lörinc", "Zsuzsanna, Tiborc", "Klára", "Ipoly", "Marcell", "Mária", "Ábrahám", "Jácint", "Ilona", "Huba", "ALKOTMÁNY ÜNN., István", "Sámuel, Hajna", "Menyhért, Mirjam", "Bence", "Bertalan", "Lajos, Patrícia", "Izsó", "Gáspár", "Ágoston", "Beatrix, Erna", "Rózsa", "Erika, Bella");
+				else if (ho == 9) napok = new Array("Egyed, Egon", "Rebeka, Dorina", "Hilda", "Rozália", "Viktor, Lőrinc", "Zakariás", "Regina", "Mária, Adrienn", "Ádám", "Nikolett, Hunor", "Teodóra", "Mária", "Kornél", "Szeréna, Roxána", "Enikő, Melitta", "Edit", "Zsófia", "Diána", "Vilhelmina", "Friderika", "Máté, Mirella", "Móric", "Tekla", "Gellért, Mercédesz", "Eufrozina, Kende", "Jusztina", "Adalbert", "Vencel", "Mihály", "Jeromos");
+				else if (ho == 10) napok = new Array("Malvin", "Petra", "Helga", "Ferenc", "Aurél", "Brúnó, Renáta", "Amália", "Koppány", "Dénes", "Gedeon", "Brigitta", "Miksa", "Kálmán, Ede", "Helén", "Teréz", "Gál", "Hedvig", "Lukács", "Nándor", "Vendel", "Orsolya", "Előd", "KÖZTÁRSASÁG KIKIÁLTÁSA, Gyöngyi", "Salamon", "Blanka, Bianka", "Dömötör", "Szabina", "Simon, Szimonetta", "Nárcisz", "Alfonz", "Farkas");
+				else if (ho == 11) napok = new Array("Marianna", "Achilles", "Győző", "Károly", "Imre", "Lénárd", "Rezső", "Zsombor", "Tivadar", "Réka", "Márton", "Jónás, Renátó", "Szilvia", "Aliz", "Albert, Lipót", "Ödön", "Hortenzia, Gergő", "Jenő", "Erzsébet", "Jolán", "Olivér", "Cecília", "Kelemen, Klementina", "Emma", "Katalin", "Virág", "Virgil", "Stefánia", "Taksony", "András, Andor");
+				else if (ho == 12) napok = new Array("Elza", "Melinda, Vivien", "Ferenc, Olívia", "Borbála, Barbara", "Vilma", "Miklós", "Ambrus", "Mária", "Natália", "Judit", "Árpád", "Gabriella", "Luca, Otília", "Szilárda", "Valér", "Etelka, Aletta", "Lázár, Olimpia", "Auguszta", "Viola", "Teofil", "Tamás", "Zénó", "Viktória", "Ádám, Éva", "KARÁCSONY, Eugénia", "KARÁCSONY, István", "János", "Kamilla", "Tamás, Tamara", "Dávid", "Szilveszter");
+				return napok[nap - 1];
+			}
+		</script>
+		
+		<style type="text/css">
+			.area {
+				width: 700px;
+				height: 75px;
+			}
+		</style>
+		
+	</head>
+	
+	<body class="area" onload="Info()">
+		
+		<div>
+			<g:background id="namedays" style="position:relative; width: 700px; height: 75px; z-index: -1" src="./Images/bg.png">
+			</g:background>
+		</div>
+		
+	</body>
+</html>
